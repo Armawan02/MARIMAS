@@ -345,6 +345,7 @@ td { padding: 16px 14px; }
 .account-review-card p { color: #75696a; font-size: 16px; line-height: 1.7; }
 .account-review-email { margin: 22px 0; padding: 14px; border-radius: 8px; background: #faf6f1; color: #6f1024; font-weight: 700; overflow-wrap: anywhere; }
 .account-review-card .button { margin: 5px; }
+.dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 /* Mobile layout refinements */
 @media (max-width: 760px) {
@@ -365,6 +366,7 @@ td { padding: 16px 14px; }
   .hero-art { right: -13%; opacity: .55; transform: scale(.65); transform-origin: center right; }
   .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stats-grid .stat-card:last-child { grid-column: 1 / -1; }
+  .dashboard-stats .stat-card:last-child { grid-column: auto; }
   .stat-card { min-width: 0; padding: 14px; }
   .stat-value { font-size: 28px; }
   .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
