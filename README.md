@@ -18,6 +18,12 @@ Impor repository ini di Vercel dengan framework preset **Vite**. Tambahkan semua
 
 Konfigurasi Firebase Web App berada di sisi browser. Batasi akses data melalui Firestore Security Rules dan tambahkan domain Vercel ke **Authentication → Settings → Authorized domains**.
 
+## Foto profil dan bukti logbook
+
+Foto dikompres di browser lalu disimpan sebagai dokumen Firestore terpisah: `profilePhotos/{uid}` dan `logbookPhotos/{logId}`. Tidak perlu mengaktifkan Firebase Storage, membuat koneksi Google Drive, atau menambahkan rahasia OAuth di Vercel. Terapkan aturan pada `firestore.rules` di Firebase Console agar foto hanya dapat diakses sesuai hak akun.
+
+Paket gratis Firestore memiliki batas penyimpanan dan kuota pemakaian. Foto sudah dikompres agar tetap kecil; untuk penggunaan besar atau banyak pengguna, periksa kuota Firebase secara berkala.
+
 ## Koleksi Firestore
 
 - `users/{uid}`: profil akun dan role.

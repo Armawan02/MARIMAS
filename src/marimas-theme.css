@@ -609,9 +609,15 @@ body { font-size: var(--font-body); line-height: 1.6; }
 .captured-photo-preview strong { color: #451521; font-size: .88rem; }
 .captured-photo-preview small { color: #756b68; font-size: .76rem; overflow-wrap: anywhere; }
 .captured-photo-preview .text-button { justify-self: start; padding: 3px 0; color: #a21b35; font-size: .8rem; }
-.logbook-photo-link { display: flex; align-items: center; gap: 8px; margin-top: 7px; color: #8b1730; font-size: .78rem; font-weight: 700; text-decoration: none; }
+.logbook-photo-link { display: flex; align-items: center; gap: 8px; margin-top: 7px; padding: 0; border: 0; color: #8b1730; background: transparent; font: inherit; font-size: .78rem; font-weight: 700; text-decoration: none; cursor: pointer; }
 .logbook-photo-link:hover { text-decoration: underline; }
 .logbook-photo-thumb { width: 70px; height: 52px; flex: 0 0 auto; object-fit: cover; border-radius: 5px; border: 1px solid #eadbd6; }
+.evidence-backdrop { z-index: 75; }
+.evidence-dialog { width: min(100%, 720px); max-height: 90dvh; overflow: auto; padding: 22px; border-radius: 13px; background: #fff; box-shadow: 0 18px 60px rgba(16, 37, 27, .25); }
+.evidence-dialog .modal-top { margin-bottom: 14px; }
+.evidence-dialog h2 { margin: 7px 0 0; color: #451521; font-size: 1.25rem; }
+.evidence-image { display: block; width: 100%; max-height: 66dvh; object-fit: contain; border-radius: 8px; background: #24161a; }
+.evidence-metadata { margin: 12px 0 0; color: #5f4c50; font-size: .88rem; line-height: 1.55; }
 .camera-backdrop { position: fixed; z-index: 110; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(25, 13, 17, .78); backdrop-filter: blur(4px); }
 .camera-dialog { width: min(100%, 680px); max-height: min(94dvh, 850px); overflow: auto; padding: 18px; border-radius: 14px; background: #fff; box-shadow: 0 24px 70px rgba(0, 0, 0, .35); }
 .camera-dialog-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
@@ -625,7 +631,14 @@ body { font-size: var(--font-body); line-height: 1.6; }
 .camera-error { display: grid; justify-items: center; gap: 12px; padding: 30px 16px; color: #781329; text-align: center; }
 .camera-error p { max-width: 420px; margin: 0; color: #5f4c50; line-height: 1.55; }
 .camera-dialog .geo-hint { margin-top: 10px; }
+
+/* Keep long dialogs scrollable on desktop and mobile viewports. */
+.modal-backdrop { overflow-y: auto; overscroll-behavior: contain; }
+.modal { max-height: calc(100dvh - 36px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
 @media (max-width: 600px) {
+  .modal-backdrop { padding: 10px; align-items: start; }
+  .modal { width: 100%; max-height: calc(100dvh - 20px); padding: 18px; }
   .camera-backdrop { padding: 10px; }
   .camera-dialog { padding: 13px; }
   .camera-view { min-height: 220px; aspect-ratio: 3 / 4; }
@@ -634,4 +647,5 @@ body { font-size: var(--font-body); line-height: 1.6; }
   .log-photo-actions { display: grid; grid-template-columns: 1fr; }
   .log-photo-actions .button { justify-content: center; }
   .captured-photo-preview > img { width: 88px; height: 82px; }
+  .evidence-dialog { padding: 15px; }
 }

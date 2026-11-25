@@ -26,12 +26,22 @@ service cloud.firestore {
       allow delete: if admin();
     }
 
+    match /profilePhotos/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['photoData', 'updatedAt'])
+        && request.resource.data.photoData is string
+        && request.resource.data.photoData.size() <= 250000;
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
+
     match /logbooks/{logId} {
       allow read: if signedIn() && (admin() || studentOwns(resource.data.studentId)
         || hasRole('Dosen Pembimbing') || hasRole('Pembimbing Lapangan'));
       allow create: if signedIn() && hasRole('Mahasiswa')
         && request.resource.data.studentId == request.auth.uid
-        && request.resource.data.status == 'Menunggu';
+        && request.resource.data.status == 'Menunggu'
+        && request.resource.data.photoEvidenceId == logId;
       allow update: if admin() || (signedIn() && hasRole('Pembimbing Lapangan')
         && resource.data.status == 'Menunggu'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewedAt', 'reviewedBy', 'reviewComment'])
@@ -40,6 +50,17 @@ service cloud.firestore {
         && request.resource.data.status in ['Disetujui', 'Perlu revisi']);
       allow delete: if admin() || (signedIn() && hasRole('Mahasiswa')
         && resource.data.studentId == request.auth.uid && resource.data.status == 'Menunggu');
+    }
+
+    match /logbookPhotos/{photoId} {
+      allow read: if signedIn() && (admin() || studentOwns(resource.data.studentId)
+        || hasRole('Dosen Pembimbing') || hasRole('Pembimbing Lapangan'));
+      allow create: if signedIn() && hasRole('Mahasiswa')
+        && request.resource.data.studentId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['photoData', 'studentId', 'createdAt'])
+        && request.resource.data.photoData is string
+        && request.resource.data.photoData.size() <= 700000;
+      allow update, delete: if admin();
     }
 
     match /evaluations/{evaluationId} {
