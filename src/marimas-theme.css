@@ -203,6 +203,8 @@ td { padding: 13px 12px; }
 :root { --canvas: #f5f6f8; --line: #e4e6eb; }
 .sidebar { border-top: 4px solid #e4b83e; background: #fff; }
 .brand-icon { border-radius: 8px; box-shadow: none; }
+.brand-icon { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 0; background: transparent; color: inherit; box-shadow: none; }
+.brand-icon img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .brand-copy strong { letter-spacing: 1.4px; }
 .topbar { background: #6f1024; color: #fff; border-bottom: 3px solid #e4b83e; }
 .breadcrumb, .breadcrumb strong, .crumb-sep { color: #fff4dc; }
