@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function userDoc() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
-    function accountApproved() { return signedIn() && (!userDoc().data.keys().hasAny(['accountStatus']) || userDoc().data.accountStatus == 'Disetujui'); }
+    function accountApproved() { return signedIn() && (userDoc().data.role == 'Admin' || userDoc().data.accountStatus == 'Disetujui'); }
     function hasRole(role) { return accountApproved() && userDoc().data.role == role; }
     function admin() { return hasRole('Admin'); }
     function studentOwns(studentId) { return accountApproved() && studentId == request.auth.uid; }
@@ -13,11 +13,16 @@ service cloud.firestore {
       allow create: if signedIn() && request.auth.uid == uid
         && request.resource.data.role == 'Mahasiswa'
         && request.resource.data.accountStatus == 'Menunggu verifikasi'
-        && request.resource.data.email == request.auth.token.email;
-      allow update: if admin() || (signedIn() && request.auth.uid == uid
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.email == resource.data.email
-        && request.resource.data.accountStatus == resource.data.accountStatus);
+        && request.resource.data.requestedRole in ['Mahasiswa', 'Dosen Pembimbing', 'Pembimbing Lapangan']
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 3
+        && (request.resource.data.requestedRole == 'Mahasiswa'
+          ? request.resource.data.nim is string && request.resource.data.nim.size() >= 5
+            && request.resource.data.nim.size() <= 20 && request.resource.data.programStudi is string
+            && request.resource.data.programStudi.size() > 0
+          : request.resource.data.unitKerja is string && request.resource.data.unitKerja.size() > 0);
+      allow update: if admin();
       allow delete: if admin();
     }
 

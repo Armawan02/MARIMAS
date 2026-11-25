@@ -335,3 +335,13 @@ td { padding: 16px 14px; }
 .review-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .review-actions .approve-button, .review-actions .revise-button { min-height: 38px; padding: 8px 12px; border-radius: 6px; font: 700 13px 'DM Sans', sans-serif; cursor: pointer; }
 .review-actions .revise-button { border: 1px solid #efd79d; background: #fffaf0; color: #795a13; }
+.account-review-screen { min-height: 100vh; display: grid; place-items: center; padding: 28px; background: linear-gradient(145deg, #f7f3ef, #fffaf4); }
+.account-review-card { width: min(100%, 560px); padding: clamp(28px, 5vw, 54px); border: 1px solid #eadfd8; border-radius: 16px; background: #fff; box-shadow: 0 24px 70px #32121b12; text-align: center; }
+.account-review-card .brand { justify-content: center; margin: 0 auto 30px; }
+.account-review-mark { width: 72px; height: 72px; display: grid; place-items: center; margin: 0 auto 22px; border-radius: 50%; background: #fff2cf; color: #7c5a00; }
+.account-review-mark.rejected { background: #fbe7e9; color: #a51f35; }
+.account-review-card .eyebrow { justify-content: center; }
+.account-review-card h1 { margin: 12px 0; color: #451521; font: 800 clamp(28px, 4vw, 38px)/1.15 'Manrope', sans-serif; }
+.account-review-card p { color: #75696a; font-size: 16px; line-height: 1.7; }
+.account-review-email { margin: 22px 0; padding: 14px; border-radius: 8px; background: #faf6f1; color: #6f1024; font-weight: 700; overflow-wrap: anywhere; }
+.account-review-card .button { margin: 5px; }
