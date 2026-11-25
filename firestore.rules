@@ -11,6 +11,34 @@ service cloud.firestore {
     function hasRole(role) { return accountApproved() && userDoc().data.role == role; }
     function admin() { return hasRole('Admin'); }
     function studentOwns(studentId) { return accountApproved() && studentId == request.auth.uid; }
+    function isApprovedStudent(studentId) {
+      let student = get(/databases/$(database)/documents/users/$(studentId)).data;
+      return student.role == 'Mahasiswa'
+        && (!student.keys().hasAny(['accountStatus']) || student.accountStatus == 'Disetujui');
+    }
+    function evaluationWindowOpen() {
+      return exists(/databases/$(database)/documents/appSettings/evaluation)
+        && get(/databases/$(database)/documents/appSettings/evaluation).data.open == true;
+    }
+    function validFinalRubric() {
+      let scores = request.resource.data.criteriaScores;
+      return scores is map
+        && scores.keys().hasOnly(['sikap', 'kerajinan', 'prestasi'])
+        && scores.keys().hasAll(['sikap', 'kerajinan', 'prestasi'])
+        && scores.sikap in [50, 60, 65, 70, 75, 80, 85, 90, 100]
+        && scores.kerajinan in [50, 60, 65, 70, 75, 80, 85, 90, 100]
+        && scores.prestasi in [50, 60, 65, 70, 75, 80, 85, 90, 100]
+        && request.resource.data.score == (scores.sikap + scores.kerajinan + scores.prestasi) / 3
+        && request.resource.data.type == 'Penilaian Akhir'
+        && request.resource.data.grade == (request.resource.data.score >= 85 ? 'A'
+          : request.resource.data.score > 80 ? 'A-'
+          : request.resource.data.score >= 75 ? 'B+'
+          : request.resource.data.score >= 70 ? 'B'
+          : request.resource.data.score >= 65 ? 'B-'
+          : request.resource.data.score >= 50 ? 'C'
+          : request.resource.data.score >= 40 ? 'D' : 'E')
+        && request.resource.data.keys().hasOnly(['studentId', 'criterion', 'criteriaScores', 'score', 'grade', 'type', 'note', 'date', 'studentName', 'evaluatorId', 'evaluatorName', 'evaluatorRole', 'createdAt']);
+    }
 
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || admin() || hasRole('Dosen Pembimbing') || hasRole('Pembimbing Lapangan'));
@@ -76,11 +104,29 @@ service cloud.firestore {
     match /evaluations/{evaluationId} {
       allow read: if signedIn() && (admin() || studentOwns(resource.data.studentId)
         || hasRole('Dosen Pembimbing') || hasRole('Pembimbing Lapangan'));
-      allow create: if signedIn() && (hasRole('Admin') || hasRole('Dosen Pembimbing') || hasRole('Pembimbing Lapangan'))
+      allow create: if signedIn()
         && request.resource.data.evaluatorId == request.auth.uid
-        && request.resource.data.score is number
-        && request.resource.data.score >= 0 && request.resource.data.score <= 100;
+        && (admin()
+          || (evaluationWindowOpen() && hasRole('Dosen Pembimbing')
+            && request.resource.data.studentId is string
+            && isApprovedStudent(request.resource.data.studentId)
+            && request.resource.data.score is number
+            && request.resource.data.score >= 0 && request.resource.data.score <= 100)
+          || (evaluationWindowOpen() && hasRole('Pembimbing Lapangan')
+            && request.resource.data.studentId is string
+            && isApprovedStudent(request.resource.data.studentId)
+            && request.resource.data.criteriaScores is map
+            && validFinalRubric()));
       allow update, delete: if admin();
+    }
+
+    match /appSettings/{settingId} {
+      allow read: if signedIn();
+      allow create, update: if admin() && settingId == 'evaluation'
+        && request.resource.data.keys().hasOnly(['open', 'updatedBy', 'updatedAt'])
+        && request.resource.data.open is bool
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if admin() && settingId == 'evaluation';
     }
   }
 }
