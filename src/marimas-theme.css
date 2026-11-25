@@ -635,6 +635,7 @@ body { font-size: var(--font-body); line-height: 1.6; }
 /* Keep long dialogs scrollable on desktop and mobile viewports. */
 .modal-backdrop { overflow-y: auto; overscroll-behavior: contain; }
 .modal { max-height: calc(100dvh - 36px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.log-save-error { padding: 11px 13px; border: 1px solid #f0c9ca; border-radius: 8px; line-height: 1.5; overflow-wrap: anywhere; }
 
 @media (max-width: 600px) {
   .modal-backdrop { padding: 10px; align-items: start; }
