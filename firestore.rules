@@ -3,18 +3,21 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function userDoc() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
-    function hasRole(role) { return signedIn() && userDoc().data.role == role; }
+    function accountApproved() { return signedIn() && (!userDoc().data.keys().hasAny(['accountStatus']) || userDoc().data.accountStatus == 'Disetujui'); }
+    function hasRole(role) { return accountApproved() && userDoc().data.role == role; }
     function admin() { return hasRole('Admin'); }
-    function studentOwns(studentId) { return signedIn() && studentId == request.auth.uid; }
+    function studentOwns(studentId) { return accountApproved() && studentId == request.auth.uid; }
 
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || admin() || hasRole('Dosen Pembimbing') || hasRole('Pembimbing Lapangan'));
       allow create: if signedIn() && request.auth.uid == uid
         && request.resource.data.role == 'Mahasiswa'
+        && request.resource.data.accountStatus == 'Menunggu verifikasi'
         && request.resource.data.email == request.auth.token.email;
       allow update: if admin() || (signedIn() && request.auth.uid == uid
         && request.resource.data.role == resource.data.role
-        && request.resource.data.email == resource.data.email);
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.accountStatus == resource.data.accountStatus);
       allow delete: if admin();
     }
 
