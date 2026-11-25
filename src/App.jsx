@@ -102,9 +102,18 @@ export default function App() {
     try { await updateDoc(doc(db, 'users', student.uid), { role: nextRole }); notify(`Role ${student.name} diubah menjadi ${nextRole}.`); }
     catch (error) { notify(`Role gagal diperbarui: ${error.message}`); }
   }
+  async function changeAccountStatus(student, accountStatus) {
+    try { await updateDoc(doc(db, 'users', student.uid), { accountStatus, reviewedBy: user.uid, reviewedAt: serverTimestamp() }); notify(`Akun ${student.name} ${accountStatus === 'Disetujui' ? 'disetujui' : 'ditolak'}.`); }
+    catch (error) { notify(`Status akun gagal diperbarui: ${error.message}`); }
+  }
+  async function refreshProfile() {
+    try { const snapshot = await getDoc(doc(db, 'users', user.uid)); if (snapshot.exists()) setProfile({ ...snapshot.data(), uid: user.uid }); }
+    catch (error) { notify(`Status akun belum dapat dimuat: ${error.message}`); }
+  }
 
   if (user === undefined) return <div className="loading-screen"><Brand /><span className="loader" />Memuat portal magang...</div>;
   if (!user) return <SignIn onConfigured={() => location.reload()} />;
+  if (profile?.accountStatus && profile.accountStatus !== 'Disetujui') return <AccountReview status={profile.accountStatus} email={user.email} onRefresh={refreshProfile} onSignOut={() => signOut(auth)} />;
 
   return <div className="app-shell">
     <aside className={`sidebar ${mobileNav ? 'open' : ''}`}><Brand /><div className="sidebar-label">MENU UTAMA</div><nav className="main-nav">{nav.filter(item => item.id !== 'mahasiswa' || role !== 'Mahasiswa').map(({ id, label, Icon }) => <button key={id} onClick={() => { setPage(id); location.hash = id; setMobileNav(false); }} className={`nav-link ${page === id ? 'active' : ''}`}><Icon size={17} />{label}{id === 'logbook' && <span className="nav-count">{logs.length}</span>}</button>)}</nav><div className="sidebar-divider" /><div className="sidebar-label">AKUN</div><div className="sidebar-bottom"><div className="help-card"><span className="help-spark">✳</span><strong>Butuh bantuan?</strong><p>Tim akademik siap membantu perjalanan magangmu.</p><a href="mailto:humas@unsulbar.ac.id">Hubungi kami ↗</a></div><div className="user-mini"><div className="avatar avatar-green">{initials(name)}</div><div className="user-mini-copy"><strong>{name}</strong><small>{role}</small></div><button title="Keluar" className="icon-button" onClick={() => signOut(auth)}><LogOut size={15} /></button></div></div></aside>
