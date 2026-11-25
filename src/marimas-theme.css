@@ -428,3 +428,84 @@ td { padding: 16px 14px; }
   .account-review-card { padding: 24px 18px; }
   .footer { flex-wrap: wrap; }
 }
+
+/* Consistent type scale: page title, section title, supporting text, detail */
+:root {
+  --font-body: 1rem;
+  --font-page-title: 2rem;
+  --font-section-title: 1.375rem;
+  --font-card-title: 1.125rem;
+  --font-subtitle: 1rem;
+  --font-label: .9375rem;
+  --font-detail: .8125rem;
+}
+body { font-size: var(--font-body); line-height: 1.6; }
+.welcome-row h1, .page-title-row h1 {
+  font-size: var(--font-page-title);
+  line-height: 1.2;
+  letter-spacing: -.035em;
+}
+.signin-art-copy h1 {
+  font-size: clamp(2.75rem, 4.1vw, 3.75rem);
+  line-height: 1.1;
+  letter-spacing: -.045em;
+}
+.signin-form h2, .modal-top h2, .account-review-card h1 {
+  font-size: 1.875rem;
+  line-height: 1.2;
+  letter-spacing: -.03em;
+}
+.section-heading h2 { font-size: var(--font-section-title); line-height: 1.3; }
+.panel-heading h3 { font-size: var(--font-card-title); line-height: 1.35; }
+.eyebrow { font-size: .75rem; line-height: 1.4; }
+.page-subtitle, .signin-form > p, .hero-content p, .score-summary p,
+.bottom-banner p, .account-review-card p {
+  font-size: var(--font-subtitle);
+  line-height: 1.6;
+}
+.panel-heading p, .section-heading p, .signin-form label,
+.evaluation-form label, .modal label, .bottom-banner strong {
+  font-size: var(--font-label);
+  line-height: 1.5;
+}
+.table-wrap table, .activity-copy strong, .progress-date,
+.progress-bottom, .mentor-row, .filter-select, .search-box input {
+  font-size: .875rem;
+  line-height: 1.5;
+}
+.activity-copy small, .table-description, .table-footer, .empty-state,
+.score-caption, .score-key, .signin-toggle, .signin-notice,
+.profile-field, .settings-details > p, .footer {
+  font-size: var(--font-detail);
+  line-height: 1.55;
+}
+.table-wrap th { font-size: .75rem; line-height: 1.4; }
+.button, .button-outline, .review-actions .approve-button,
+.review-actions .revise-button { font-size: .9375rem; line-height: 1.3; }
+.signin-form input, .evaluation-form input, .evaluation-form select,
+.evaluation-form textarea, .modal input, .modal select, .modal textarea {
+  font-size: .9375rem;
+  line-height: 1.45;
+}
+.brand-copy strong { font-size: 1.375rem; line-height: 1.15; }
+.brand-copy small { font-size: .625rem; line-height: 1.35; }
+.brand-copy .brand-campus { font-size: .5625rem; line-height: 1.35; }
+
+@media (max-width: 760px) {
+  :root {
+    --font-body: .9375rem;
+    --font-page-title: 1.75rem;
+    --font-section-title: 1.25rem;
+    --font-card-title: 1.0625rem;
+    --font-subtitle: .9375rem;
+    --font-label: .875rem;
+    --font-detail: .8125rem;
+  }
+  .signin-art-copy h1 { font-size: clamp(2rem, 8vw, 2.5rem); }
+  .signin-form h2, .modal-top h2, .account-review-card h1 { font-size: 1.625rem; }
+  .signin-form > p, .page-subtitle, .hero-content p,
+  .score-summary p, .account-review-card p { font-size: .9375rem; }
+  .welcome-row h1, .page-title-row h1 { font-size: var(--font-page-title); }
+  .button, .button-outline, .review-actions .approve-button,
+  .review-actions .revise-button { font-size: .875rem; }
+}
