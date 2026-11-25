@@ -273,13 +273,17 @@ td { padding: 16px 14px; }
 .signin-screen { grid-template-columns: minmax(0, 1.05fr) minmax(520px, .95fr); background: #f4f5f7; }
 .signin-art {
   border-right: 0; padding: 38px 8%;
-  background: linear-gradient(145deg, #5b1021 0%, #781329 58%, #8e2032 100%);
+  background-image: linear-gradient(90deg, rgba(61, 9, 25, .88) 0%, rgba(92, 13, 35, .72) 54%, rgba(92, 13, 35, .34) 100%), url('/kampus-unsulbar.jpg');
+  background-color: #5b1021;
+  background-size: cover;
+  background-position: center;
 }
 .signin-art:after {
   content: 'MARIMAS'; position: absolute; right: -18px; bottom: 80px;
   color: #fff; opacity: .035; font: 800 clamp(90px, 14vw, 210px)/1 'Manrope', sans-serif;
   letter-spacing: .08em; pointer-events: none;
 }
+.signin-illustration { display: none; }
 .signin-art .brand { position: relative; z-index: 2; }
 .signin-art .brand-icon { width: 72px; height: 72px; flex-basis: 72px; padding: 5px; background: #fff; border-radius: 50%; }
 .signin-art .brand-copy strong { font-size: 25px; }
