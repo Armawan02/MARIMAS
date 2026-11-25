@@ -34,6 +34,7 @@ function SignIn({ onConfigured }) {
 
 function Brand() { return <a className="brand" href="#dashboard" aria-label="MARIMAS — Magang Mandiri Humas, Universitas Sulawesi Barat"><span className="brand-icon"><img src="/unsulbar-logo.png" alt="Lambang Universitas Sulawesi Barat" /></span><span className="brand-copy"><strong>MARIMAS</strong><small>MAGANG MANDIRI HUMAS</small><small className="brand-campus">UNIVERSITAS SULAWESI BARAT</small></span></a>; }
 function Status({ value }) { const approved = value === 'Disetujui' || value === 'Aktif' || value === 'Sudah dinilai'; return <span className={`status-pill ${approved ? 'approved' : value === 'Perlu revisi' ? 'revision' : 'waiting'}`}>{value || 'Menunggu'}</span>; }
+function AccountReview({ status, email, onRefresh, onSignOut }) { const rejected = status === 'Ditolak'; return <main className="account-review-screen"><section className="account-review-card"><Brand /><div className={`account-review-mark ${rejected ? 'rejected' : ''}`}>{rejected ? <X size={30} /> : <ShieldCheck size={30} />}</div><span className="eyebrow">STATUS AKUN</span><h1>{rejected ? 'Pendaftaran belum disetujui' : 'Menunggu verifikasi Admin'}</h1><p>{rejected ? 'Akun ini belum mendapat persetujuan untuk masuk ke portal. Silakan hubungi Admin MARIMAS.' : 'Data pendaftaranmu sedang diperiksa Admin. Fitur logbook dan penilaian akan terbuka setelah akun disetujui.'}</p><div className="account-review-email">{email}</div>{!rejected && <button className="button button-primary" onClick={onRefresh}>Periksa status</button>}<button className="button button-outline" onClick={onSignOut}>Keluar</button></section></main>; }
 
 export default function App() {
   const [user, setUser] = useState(undefined), [profile, setProfile] = useState(null), [page, setPage] = useState(location.hash.slice(1) || 'dashboard');
@@ -55,7 +56,7 @@ export default function App() {
     try {
       const ref = doc(db, 'users', current.uid), snapshot = await getDoc(ref);
       if (!snapshot.exists()) {
-        const fallback = { name: current.displayName || current.email.split('@')[0], email: current.email, role: 'Mahasiswa', createdAt: serverTimestamp() };
+        const fallback = { name: current.displayName || current.email.split('@')[0], email: current.email, role: 'Mahasiswa', accountStatus: 'Menunggu verifikasi', createdAt: serverTimestamp() };
         await setDoc(ref, fallback); setProfile({ ...fallback, uid: current.uid });
       } else setProfile({ ...snapshot.data(), uid: current.uid });
     } catch (error) { notify(`Gagal memuat profil: ${error.message}`); }
@@ -63,7 +64,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!user || !profile) return undefined;
+    if (!user || !profile || (profile.accountStatus && profile.accountStatus !== 'Disetujui')) return undefined;
     const isStudent = role === 'Mahasiswa';
     const logQuery = isStudent ? query(collection(db, 'logbooks'), where('studentId', '==', user.uid)) : query(collection(db, 'logbooks'));
     const stopLogs = onSnapshot(logQuery, snap => setLogs(snap.docs.map(item => ({ id: item.id, ...item.data() })).sort((a, b) => (b.date || '').localeCompare(a.date || ''))), error => notify(`Logbook: ${error.message}`));
