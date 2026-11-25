@@ -3,7 +3,11 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function userDoc() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
-    function accountApproved() { return signedIn() && (userDoc().data.role == 'Admin' || userDoc().data.accountStatus == 'Disetujui'); }
+    function accountApproved() {
+      return signedIn() && (userDoc().data.role == 'Admin'
+        || !userDoc().data.keys().hasAny(['accountStatus'])
+        || userDoc().data.accountStatus == 'Disetujui');
+    }
     function hasRole(role) { return accountApproved() && userDoc().data.role == role; }
     function admin() { return hasRole('Admin'); }
     function studentOwns(studentId) { return accountApproved() && studentId == request.auth.uid; }
@@ -38,9 +42,14 @@ service cloud.firestore {
     match /logbooks/{logId} {
       allow read: if signedIn() && (admin() || studentOwns(resource.data.studentId)
         || hasRole('Dosen Pembimbing') || hasRole('Pembimbing Lapangan'));
-      allow create: if signedIn() && hasRole('Mahasiswa')
-        && request.resource.data.studentId == request.auth.uid
-        && request.resource.data.status == 'Menunggu'
+      allow create: if signedIn()
+        && ((hasRole('Mahasiswa')
+            && request.resource.data.studentId == request.auth.uid
+            && request.resource.data.status == 'Menunggu')
+          || (admin()
+            && request.resource.data.studentId is string
+            && get(/databases/$(database)/documents/users/$(request.resource.data.studentId)).data.role == 'Mahasiswa'
+            && request.resource.data.status in ['Menunggu', 'Disetujui', 'Perlu revisi']))
         && request.resource.data.photoEvidenceId == logId;
       allow update: if admin() || (signedIn() && hasRole('Pembimbing Lapangan')
         && resource.data.status == 'Menunggu'
@@ -55,8 +64,9 @@ service cloud.firestore {
     match /logbookPhotos/{photoId} {
       allow read: if signedIn() && (admin() || studentOwns(resource.data.studentId)
         || hasRole('Dosen Pembimbing') || hasRole('Pembimbing Lapangan'));
-      allow create: if signedIn() && hasRole('Mahasiswa')
-        && request.resource.data.studentId == request.auth.uid
+      allow create: if signedIn()
+        && ((hasRole('Mahasiswa') && request.resource.data.studentId == request.auth.uid) || admin())
+        && request.resource.data.studentId is string
         && request.resource.data.keys().hasOnly(['photoData', 'studentId', 'createdAt'])
         && request.resource.data.photoData is string
         && request.resource.data.photoData.size() <= 700000;
