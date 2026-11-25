@@ -509,3 +509,50 @@ body { font-size: var(--font-body); line-height: 1.6; }
   .button, .button-outline, .review-actions .approve-button,
   .review-actions .revise-button { font-size: .875rem; }
 }
+
+/* Logbook clarity: fixed columns, readable cell hierarchy, predictable wrapping */
+.page-title-row { align-items: center; gap: 24px; margin-bottom: 22px; }
+.page-title-row > div { min-width: 0; }
+.page-title-row h1 { font-size: 2rem; line-height: 1.2; margin: 8px 0 6px; }
+.page-title-row .page-subtitle { font-size: 1rem; line-height: 1.55; }
+.page-title-row > .button { min-height: 44px; padding: 10px 16px; font-size: .9rem; flex: 0 0 auto; }
+.filter-row { display: flex; align-items: center; gap: 12px; margin: 20px 0 16px; }
+.search-box { height: 44px; width: min(360px, 100%); border-radius: 8px; }
+.search-box input, .filter-select { font-size: .9rem; }
+.filter-select { height: 44px; min-width: 138px; border-radius: 8px; }
+.table-panel { border-radius: 10px; }
+.logbook-table { width: 100%; min-width: 100% !important; table-layout: fixed; white-space: normal; }
+.logbook-table th, .logbook-table td { white-space: normal; overflow-wrap: anywhere; vertical-align: top; padding: 14px 12px; }
+.logbook-table th { font-size: .72rem; letter-spacing: .045em; line-height: 1.4; }
+.logbook-table td { font-size: .84rem; line-height: 1.5; }
+.logbook-table th:nth-child(1), .logbook-table td:nth-child(1) { width: 10%; }
+.logbook-table th:nth-child(2), .logbook-table td:nth-child(2) { width: 12%; }
+.logbook-table th:nth-child(3), .logbook-table td:nth-child(3) { width: 29%; }
+.logbook-table th:nth-child(4), .logbook-table td:nth-child(4) { width: 14%; }
+.logbook-table th:nth-child(5), .logbook-table td:nth-child(5) { width: 8%; }
+.logbook-table th:nth-child(6), .logbook-table td:nth-child(6) { width: 11%; }
+.logbook-table th:nth-child(7), .logbook-table td:nth-child(7) { width: 16%; }
+.logbook-table-review th:nth-child(1), .logbook-table-review td:nth-child(1) { width: 8%; }
+.logbook-table-review th:nth-child(2), .logbook-table-review td:nth-child(2) { width: 10%; }
+.logbook-table-review th:nth-child(3), .logbook-table-review td:nth-child(3) { width: 22%; }
+.logbook-table-review th:nth-child(4), .logbook-table-review td:nth-child(4) { width: 10%; }
+.logbook-table-review th:nth-child(5), .logbook-table-review td:nth-child(5) { width: 7%; }
+.logbook-table-review th:nth-child(6), .logbook-table-review td:nth-child(6) { width: 9%; }
+.logbook-table-review th:nth-child(7), .logbook-table-review td:nth-child(7) { width: 14%; }
+.logbook-table-review th:nth-child(8), .logbook-table-review td:nth-child(8) { width: 20%; }
+.logbook-table .table-title { display: block; font-size: .9rem; line-height: 1.45; font-weight: 700; }
+.logbook-table .table-description { display: block; max-width: none; margin-top: 5px; font-size: .8rem; line-height: 1.5; overflow: visible; text-overflow: clip; }
+.logbook-table .status-pill, .logbook-table .category-pill { display: inline-flex; align-items: center; white-space: normal; font-size: .75rem; line-height: 1.35; }
+.table-footer { padding: 14px 16px; }
+
+@media (max-width: 760px) {
+  .page-title-row { align-items: flex-start; gap: 14px; }
+  .page-title-row h1 { font-size: 1.7rem; }
+  .page-title-row .page-subtitle { font-size: .92rem; }
+  .page-title-row > .button { min-height: 42px; }
+  .filter-row { align-items: stretch; }
+  .search-box { flex: 1 1 100%; width: 100%; }
+  .filter-select { flex: 0 0 145px; }
+  .logbook-table { min-width: 760px !important; }
+  .logbook-table-review { min-width: 980px !important; }
+}
