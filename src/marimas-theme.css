@@ -1,0 +1,122 @@
+:root {
+  --ink: #32121b;
+  --muted: #806a6d;
+  --green: #a51f35;
+  --green-dark: #781329;
+  --mint: #fff4d2;
+  --line: #f0e3df;
+  --canvas: #fffaf4;
+  --paper: #fff;
+  --purple: #85243b;
+  --peach: #efbd39;
+  --maroon: #6f1024;
+  --red: #bd263b;
+  --yellow: #f2c94c;
+}
+
+body { background: var(--canvas); color: var(--ink); }
+.sidebar { background: #fffdf9; border-right-color: #f0e3df; }
+.brand { height: 62px; gap: 11px; }
+.brand-icon {
+  width: 43px; height: 43px; border-radius: 13px;
+  background: linear-gradient(145deg, #a51f35, #6f1024); color: #f7d65b;
+  display: grid; place-items: center; box-shadow: 0 7px 16px #6f102426;
+}
+.brand-icon svg { width: 25px; height: 25px; stroke-width: 2.2; }
+.brand-copy { gap: 3px; }
+.brand-copy strong { font: 800 19px 'Manrope', sans-serif; letter-spacing: 1.15px; color: #6f1024; }
+.brand-copy small { margin-top: 1px; font-size: 7px; font-weight: 800; letter-spacing: 1px; color: #a51f35; }
+.brand-copy .brand-campus { font-size: 6px; letter-spacing: .72px; color: #8b7776; }
+.sidebar-label { color: #9b7678; }
+.nav-link.active { background: #fff1d0; color: #781329; }
+.nav-link:hover { background: #fff8e8; color: #6f1024; }
+.nav-count { background: #ffe6aa; color: #781329; }
+.help-card { background: linear-gradient(145deg, #fff4d2, #fff8eb); }
+.help-spark, .empty-state svg { color: #bd263b; }
+.help-card a, .text-button, .hero-link { color: #8c1830; }
+.avatar-green { background: #ffedb8; color: #781329; }
+.role-badge { color: #781329; background: #fff1d0; }
+.notification-button i { background: #f0bd31; }
+.eyebrow { color: #966c70; }
+.eyebrow-dot { background: #e8b928; box-shadow: 0 0 0 3px #fff2c9; }
+.welcome-row h1, .page-title-row h1 { color: #451521; }
+.wave { color: #d29c13; }
+.button-primary { background: linear-gradient(120deg, #b6233b, #781329); box-shadow: 0 5px 13px #78132926; }
+.button-primary:hover { background: #641020; }
+.hero-card { background: linear-gradient(112deg, #741126 0%, #971b32 57%, #b72c3e 100%); box-shadow: 0 14px 34px #72132920; }
+.hero-content h2, .hero-content p { color: #fff9ec; }
+.hero-content h2 em { color: #f5d258; }
+.hero-tag { color: #f8dc75; }
+.hero-link { color: #ffe178; }
+.hero-art .art-circle { background: #b92a3e; }
+.art-sun { background: #f5d45c; }
+.art-hill { background: #edb938; }
+.art-person { color: #fff4cf; }
+.art-note { color: #781329; }
+.art-note span { color: #d5a51d; }
+.hero-orb, .art-circle-back { background: #8b1a31; }
+.art-circle-front { background: #a52238; border-color: #b6404e; }
+.art-circle-front:after { background: #e5b334; }
+.term-chip { border-color: #f0dfb4; background: #fffdf7; color: #765d50; }
+.term-chip span { background: #d8a91f; }
+.panel, .stat-card { border-color: #f0e5df; box-shadow: 0 5px 18px #53152008; }
+.stat-icon.mint { background: #fff2cf; color: #9b1b34; }
+.stat-icon.lilac { background: #f7e8ec; color: #8b2940; }
+.stat-icon.peach { background: #fff1c2; color: #a66b00; }
+.stat-progress { background: #f8eee1; }
+.stat-progress span { background: #b6253b; }
+.lilac-progress span { background: #e0af34; }
+.activity-icon { background: #fff1d0; color: #941b34; }
+.activity-icon.purple { background: #f6e8ec; color: #85243b; }
+.activity-icon.orange { background: #fff3ce; color: #a66b00; }
+.status-pill.approved { background: #fff2ca; color: #7c5a00; }
+.status-pill.revision { background: #fbe7e9; color: #a51f35; }
+.approve-button { background: #fff2cf; color: #7e5d05; }
+.score-cell, .range-field b { color: #9c1e35; }
+.score-ring { background: conic-gradient(#b5233b var(--score), #f4e7d9 var(--score) 100%); }
+.key-dot.green { background: #aa2038; }
+.key-dot.purple { background: #e2b331; }
+.evaluation-form input[type=range] { accent-color: #a51f35; }
+.table-panel, .student-panel { overflow: hidden; }
+.table-panel th, .student-panel th { background: #fff8e9; color: #806267; }
+.table-panel tr:hover, .student-panel tr:hover { background: #fffaf1; }
+.score-overview { background: linear-gradient(110deg, #741126, #9c2036); color: #fff8e9; border-radius: 12px; padding: 22px; margin-bottom: 25px; }
+.score-overview p, .score-overview .score-label { color: #f5d8d4; }
+.score-overview .big-score, .score-summary strong { color: #fff8e9; }
+.settings-panel { border-color: #f0e2dc; }
+.settings-avatar { background: #fff0c4; color: #781329; }
+.loader { border-color: #f5e6d8; border-top-color: #a51f35; }
+.signin-screen { background: #fffaf4; }
+.signin-art { background: radial-gradient(circle at 80% 12%, #f3cd51 0, transparent 24%), linear-gradient(145deg, #6f1024 0%, #9f2038 68%, #bd3442 100%); }
+.signin-art .brand-copy strong, .signin-art .brand-copy small { color: #fff8e9; }
+.signin-art .brand-icon { background: #f1c644; color: #6f1024; }
+.signin-art-copy h1 { color: #fff8ec; }
+.signin-art-copy h1 em { color: #f5d254; }
+.signin-art-copy p { color: #f4dadd; }
+.signin-art-copy .hero-tag { color: #f8db73; }
+.signin-illustration { background: #8b1a31; }
+.signin-illustration .sun { background: #f4cc49; }
+.signin-illustration .hill { background: #c38b26; }
+.signin-illustration .plant { color: #f5d45b; }
+.signin-copyright { color: #f2d5d5; }
+.signin-form h2 { color: #451521; }
+.signin-form input, .evaluation-form input, .evaluation-form select, .evaluation-form textarea,
+.modal input, .modal select, .modal textarea { border-color: #eadbd6; outline-color: #b7243b; }
+.signin-toggle button { color: #9a1b34; }
+.signin-notice { background: #fff3d4; color: #755d4e; }
+.signin-notice svg, .signin-notice b { color: #941b34; }
+.form-error { border-color: #f0c9ca; background: #fff0f0; color: #9c2535; }
+.setup-card { border-color: #f0dfd7; box-shadow: 0 20px 70px #53152012; }
+.setup-card code { background: #fff2d3; }
+.toast svg { color: #a51f35; }
+.footer { color: #8f7776; }
+
+@media (max-width: 760px) {
+  .sidebar { background: #fffdf9; }
+  .brand { height: 54px; }
+  .brand-icon { width: 39px; height: 39px; }
+  .brand-copy strong { font-size: 17px; }
+  .hero-card { background: linear-gradient(130deg, #741126, #a51f35); }
+  .hero-content { width: 72%; }
+  .hero-art { opacity: .75; }
+}
