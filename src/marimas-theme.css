@@ -743,6 +743,10 @@ body { font-size: var(--font-body); line-height: 1.6; }
 .rubric-result strong { color: #74152b; }
 .grade-guide { margin-top: 16px; padding-top: 14px; border-top: 1px solid #eee5df; color: #75696a; font-size: .84rem; line-height: 1.7; }
 .grade-cell { display: inline-grid; min-width: 34px; height: 30px; place-items: center; border-radius: 7px; background: #fff1ca; color: #6f1329; }
+.evaluation-admin-modal { width: min(100%, 640px); max-height: calc(100dvh - 32px); overflow-y: auto; }
+.admin-rubric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.admin-evaluation-result { display: grid; grid-template-columns: 1fr auto; align-content: center; gap: 4px 12px; padding: 9px 12px; border: 1px solid #f0dfb3; border-radius: 8px; background: #fff9e9; color: #6f5c52; font-size: .84rem; }
+.admin-evaluation-result strong { color: #74152b; }
 
 @media (max-width: 760px) {
   .logbook-result-count { display: none; }
@@ -762,4 +766,5 @@ body { font-size: var(--font-body); line-height: 1.6; }
   .evaluation-access-panel .button { width: 100%; }
   .evaluation-form { grid-template-columns: 1fr; }
   .evaluation-form .wide-field, .evaluation-form > button { grid-column: auto; }
+  .admin-rubric-grid { grid-template-columns: 1fr; gap: 10px; }
 }
