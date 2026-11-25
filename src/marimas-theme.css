@@ -328,3 +328,6 @@ td { padding: 16px 14px; }
   .signin-form { padding: 25px 20px; }
   .signin-form h2 { font-size: 29px; }
 }
+.review-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.review-actions .approve-button, .review-actions .revise-button { min-height: 38px; padding: 8px 12px; border-radius: 6px; font: 700 13px 'DM Sans', sans-serif; cursor: pointer; }
+.review-actions .revise-button { border: 1px solid #efd79d; background: #fffaf0; color: #795a13; }
