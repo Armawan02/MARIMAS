@@ -7,6 +7,7 @@ import { auth, db, firebaseConfigured } from './firebase';
 const roles = ['Mahasiswa', 'Admin', 'Dosen Pembimbing', 'Pembimbing Lapangan'];
 const today = () => new Date().toISOString().slice(0, 10);
 const prettyDate = value => value ? new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`)) : '—';
+const activityTimestamp = value => value?.toDate?.().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) || 'Baru saja';
 const initials = name => (name || 'MH').split(/\s+/).slice(0, 2).map(word => word[0]).join('').toUpperCase();
 const duration = log => {
   if (!log.start || !log.end) return '—';
@@ -113,6 +114,7 @@ function AccountReview({ status, email, onRefresh, onSignOut }) { const rejected
 export default function App() {
   const [user, setUser] = useState(undefined), [profile, setProfile] = useState(null), [page, setPage] = useState(location.hash.slice(1) || 'dashboard');
   const [logs, setLogs] = useState([]), [students, setStudents] = useState([]), [evaluations, setEvaluations] = useState([]), [modal, setModal] = useState(false), [toast, setToast] = useState(''), [search, setSearch] = useState(''), [statusFilter, setStatusFilter] = useState('Semua');
+  const [directActivity, setDirectActivity] = useState([]), [roleActivity, setRoleActivity] = useState([]), [roleActivitySeenAt, setRoleActivitySeenAt] = useState(0);
   const [reviewModal, setReviewModal] = useState(null);
   const [editingLog, setEditingLog] = useState(null), [logStudentId, setLogStudentId] = useState('');
   const [logStatus, setLogStatus] = useState('Menunggu'), [logComment, setLogComment] = useState('');
@@ -149,6 +151,29 @@ export default function App() {
   const role = profile?.role || 'Mahasiswa';
   const name = profile?.name || user?.displayName || user?.email?.split('@')[0] || 'Pengguna';
   const notify = message => { setToast(message); window.clearTimeout(notify.timer); notify.timer = window.setTimeout(() => setToast(''), 2800); };
+  const recordActivity = async ({ eventType, title, message, entityId, studentId, recipientUid, recipientRole }) => {
+    if (!user) return;
+    const base = {
+      eventType, title, message, actorUid: user.uid, actorName: name, actorRole: role,
+      createdAt: serverTimestamp()
+    };
+    if (entityId) base.entityId = entityId;
+    if (studentId) base.studentId = studentId;
+    const writes = [
+      addDoc(collection(db, 'activityEvents'), { ...base, recipientUid: user.uid, read: true })
+    ];
+    if (recipientUid && recipientUid !== user.uid) {
+      writes.push(addDoc(collection(db, 'activityEvents'), { ...base, recipientUid, read: false }));
+    }
+    if (recipientRole) {
+      writes.push(addDoc(collection(db, 'activityEvents'), { ...base, recipientRole }));
+    }
+    try { await Promise.all(writes); }
+    catch (error) {
+      console.error('Gagal menyimpan riwayat aktivitas:', error);
+      notify(`Aksi utama berhasil, tetapi notifikasi/riwayat gagal disimpan: ${error.message}`);
+    }
+  };
 
   useEffect(() => {
     const closeOnOutsideClick = event => {
@@ -213,6 +238,20 @@ export default function App() {
   }, [user, profile]);
 
   useEffect(() => {
+    if (!user || !profile || (profile.accountStatus && profile.accountStatus !== 'Disetujui')) return undefined;
+    setRoleActivitySeenAt(Number(localStorage.getItem(`marimas-activity-seen:${user.uid}:${role}`)) || 0);
+    const stopDirect = onSnapshot(query(collection(db, 'activityEvents'), where('recipientUid', '==', user.uid)), snapshot => {
+      setDirectActivity(snapshot.docs.map(item => ({ id: item.id, ...item.data() })));
+    }, error => notify(`Notifikasi: ${error.message}`));
+    const stopRole = role === 'Pembimbing Lapangan'
+      ? onSnapshot(query(collection(db, 'activityEvents'), where('recipientRole', '==', role)), snapshot => {
+        setRoleActivity(snapshot.docs.map(item => ({ id: item.id, ...item.data() })));
+      }, error => notify(`Notifikasi pembimbing: ${error.message}`))
+      : () => {};
+    return () => { stopDirect(); stopRole(); };
+  }, [user, profile, role]);
+
+  useEffect(() => {
     const missingThumbs = logs.filter(log => log.photoEvidenceId && !log.photoThumbnail
       && !photoThumbs[log.id] && !photoThumbRequestsRef.current.has(log.id));
     if (!missingThumbs.length) return;
@@ -263,11 +302,55 @@ export default function App() {
   const filteredLogs = useMemo(() => logs.filter(log => `${log.title} ${log.category}`.toLowerCase().includes(search.toLowerCase()) && (statusFilter === 'Semua' || log.status === statusFilter)), [logs, search, statusFilter]);
   const average = evaluations.length ? (evaluations.reduce((sum, item) => sum + Number(item.score || 0), 0) / evaluations.length).toFixed(1) : '—';
   const pending = logs.filter(log => log.status === 'Menunggu').length;
+  const activityEvents = useMemo(() => {
+    const byId = new Map([...directActivity, ...roleActivity].map(item => [item.id, item]));
+    return [...byId.values()].sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+  }, [directActivity, roleActivity]);
+  const unreadCount = directActivity.filter(item => item.read === false).length
+    + roleActivity.filter(item => (item.createdAt?.toMillis?.() || 0) > roleActivitySeenAt).length;
   const activityLocationFor = log =>
     resolvedLocations[log.id]
     || (log.activityLocation && !/^Lat\s/i.test(log.activityLocation) ? log.activityLocation : '')
     || '';
-  const nav = [{ id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard }, { id: 'logbook', label: 'Logbook', Icon: FileText }, { id: 'penilaian', label: 'Penilaian', Icon: Star }, { id: 'mahasiswa', label: 'Mahasiswa', Icon: Users }, { id: 'pengaturan', label: 'Pengaturan', Icon: Settings }];
+  const nav = [{ id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard }, { id: 'logbook', label: 'Logbook', Icon: FileText }, { id: 'penilaian', label: 'Penilaian', Icon: Star }, { id: 'riwayat', label: 'Riwayat Aktivitas', Icon: Activity }, { id: 'mahasiswa', label: 'Mahasiswa', Icon: Users }, { id: 'pengaturan', label: 'Pengaturan', Icon: Settings }];
+
+  useEffect(() => {
+    const button = document.querySelector('.notification-button');
+    if (!button) return undefined;
+    const openHistory = () => openActivityHistory();
+    button.addEventListener('click', openHistory);
+    button.setAttribute('aria-label', unreadCount ? `Notifikasi, ${unreadCount} belum dibaca` : 'Notifikasi');
+    button.dataset.unread = String(unreadCount);
+    return () => button.removeEventListener('click', openHistory);
+  }, [user, profile, role, unreadCount]);
+
+  function openActivityHistory() {
+    setPage('riwayat');
+    location.hash = 'riwayat';
+    if (user) {
+      const seenAt = Date.now();
+      localStorage.setItem(`marimas-activity-seen:${user.uid}:${role}`, String(seenAt));
+      setRoleActivitySeenAt(seenAt);
+    }
+  }
+
+  async function markActivityRead(item) {
+    if (item.recipientUid !== user.uid || item.read !== false) return;
+    try { await updateDoc(doc(db, 'activityEvents', item.id), { read: true, readAt: serverTimestamp() }); }
+    catch (error) { notify(`Notifikasi gagal ditandai dibaca: ${error.message}`); }
+  }
+
+  async function markAllActivityRead() {
+    const unread = directActivity.filter(item => item.read === false);
+    try {
+      await Promise.all(unread.map(item => updateDoc(doc(db, 'activityEvents', item.id), { read: true, readAt: serverTimestamp() })));
+      openActivityHistory();
+    } catch (error) { notify(`Notifikasi gagal ditandai dibaca: ${error.message}`); }
+  }
 
   function openLogEditor(log = null) {
     setEditingLog(log);
@@ -322,6 +405,15 @@ export default function App() {
       setLogForm({ date: today(), title: '', category: 'Konten & Media', start: '08:00', end: '16:00', description: '', activityLocation: '' });
       setEditingLog(null); setLogStudentId('');
       notify(editingLog ? 'Perubahan logbook berhasil disimpan.' : 'Foto dan logbook berhasil disimpan.');
+      await recordActivity({
+        eventType: editingLog ? 'logbook_updated' : 'logbook_created',
+        title: editingLog ? 'Logbook diperbarui' : 'Logbook baru dikirim',
+        message: `${targetStudent.name || 'Mahasiswa'}: ${logForm.title}`,
+        entityId: logRef.id,
+        studentId: targetStudent.uid,
+        recipientUid: role === 'Admin' ? targetStudent.uid : undefined,
+        recipientRole: !editingLog ? 'Pembimbing Lapangan' : undefined
+      });
     } catch (error) {
       console.error('Gagal menyimpan logbook:', error);
       const details = error.code === 'permission-denied'
@@ -387,6 +479,14 @@ export default function App() {
       if (log.photoEvidenceId) batch.delete(doc(db, 'logbookPhotos', log.photoEvidenceId));
       await batch.commit();
       notify('Logbook dan foto bukti berhasil dihapus.');
+      await recordActivity({
+        eventType: 'logbook_deleted',
+        title: 'Logbook dihapus',
+        message: `${log.studentName || name}: ${log.title}`,
+        entityId: log.id,
+        studentId: log.studentId,
+        recipientUid: role === 'Admin' ? log.studentId : undefined
+      });
     } catch (error) { notify(`Logbook gagal dihapus: ${error.message}`); }
   }
 
@@ -473,7 +573,19 @@ export default function App() {
   }
   async function reviewLog(log, status, comment) {
     if (status === 'Perlu revisi' && !comment.trim()) return notify('Tulis komentar agar mahasiswa tahu bagian yang perlu diperbaiki.');
-    try { await updateDoc(doc(db, 'logbooks', log.id), { status, reviewedAt: serverTimestamp(), reviewedBy: user.uid, reviewComment: comment.trim().slice(0, 1000) }); setReviewModal(null); notify(`Logbook ${status.toLowerCase()}.`); }
+    try {
+      await updateDoc(doc(db, 'logbooks', log.id), { status, reviewedAt: serverTimestamp(), reviewedBy: user.uid, reviewComment: comment.trim().slice(0, 1000) });
+      setReviewModal(null);
+      notify(`Logbook ${status.toLowerCase()}.`);
+      await recordActivity({
+        eventType: 'logbook_reviewed',
+        title: status === 'Disetujui' ? 'Logbook disetujui' : 'Logbook perlu revisi',
+        message: `${log.title}${comment.trim() ? ` — ${comment.trim().slice(0, 180)}` : ''}`,
+        entityId: log.id,
+        studentId: log.studentId,
+        recipientUid: log.studentId
+      });
+    }
     catch (error) { notify(`Tidak dapat memperbarui logbook: ${error.message}`); }
   }
   async function saveEvaluation(event) {
@@ -482,7 +594,19 @@ export default function App() {
     const target = students.find(item => item.uid === evalForm.studentId);
     const rubricAverage = (Number(rubricScores.sikap) + Number(rubricScores.kerajinan) + Number(rubricScores.prestasi)) / 3;
     const isFieldMentor = role === 'Pembimbing Lapangan';
-    try { await addDoc(collection(db, 'evaluations'), { ...(isFieldMentor ? { criterion: 'Penilaian akhir (3 indikator)', criteriaScores: rubricScores, score: rubricAverage, grade: finalGrade(rubricAverage), type: 'Penilaian Akhir' } : evalForm), studentId: evalForm.studentId, note: evalForm.note.trim(), date: today(), studentName: target?.name || '', evaluatorId: user.uid, evaluatorName: name, evaluatorRole: role, createdAt: serverTimestamp() }); setEvalForm(current => ({ ...current, note: '' })); notify('Penilaian berhasil disimpan.'); }
+    try {
+      const evaluation = await addDoc(collection(db, 'evaluations'), { ...(isFieldMentor ? { criterion: 'Penilaian akhir (3 indikator)', criteriaScores: rubricScores, score: rubricAverage, grade: finalGrade(rubricAverage), type: 'Penilaian Akhir' } : evalForm), studentId: evalForm.studentId, note: evalForm.note.trim(), date: today(), studentName: target?.name || '', evaluatorId: user.uid, evaluatorName: name, evaluatorRole: role, createdAt: serverTimestamp() });
+      setEvalForm(current => ({ ...current, note: '' }));
+      notify('Penilaian berhasil disimpan.');
+      await recordActivity({
+        eventType: 'evaluation_created',
+        title: 'Penilaian baru diterima',
+        message: `${isFieldMentor ? 'Penilaian akhir' : evalForm.criterion} dari ${name}`,
+        entityId: evaluation.id,
+        studentId: evalForm.studentId,
+        recipientUid: evalForm.studentId
+      });
+    }
     catch (error) { notify(`Penilaian gagal disimpan: ${error.message}`); }
   }
   async function toggleEvaluationAccess() {
@@ -491,6 +615,12 @@ export default function App() {
       const nextOpen = !evaluationOpen;
       await setDoc(doc(db, 'appSettings', 'evaluation'), { open: nextOpen, updatedBy: user.uid, updatedAt: serverTimestamp() }, { merge: true });
       notify(nextOpen ? 'Akses penilaian dibuka.' : 'Akses penilaian ditutup.');
+      await recordActivity({
+        eventType: 'evaluation_access_changed',
+        title: nextOpen ? 'Periode penilaian dibuka' : 'Periode penilaian ditutup',
+        message: nextOpen ? 'Pembimbing dapat mulai mengisi penilaian.' : 'Pengisian penilaian telah dihentikan.',
+        recipientRole: nextOpen ? 'Pembimbing Lapangan' : undefined
+      });
     } catch (error) { notify(`Pengaturan akses penilaian gagal: ${error.message}`); }
     finally { setEvaluationSettingsBusy(false); }
   }
@@ -523,9 +653,25 @@ export default function App() {
       if (evaluationEditor) {
         await updateDoc(doc(db, 'evaluations', evaluationEditor.id), { ...data, updatedAt: serverTimestamp(), updatedBy: user.uid });
         notify('Penilaian berhasil diperbarui.');
+        await recordActivity({
+          eventType: 'evaluation_updated',
+          title: 'Penilaian diperbarui Admin',
+          message: `Penilaian ${target.name || 'mahasiswa'} tanggal ${prettyDate(evaluationDraft.date)} telah diperbarui.`,
+          entityId: evaluationEditor.id,
+          studentId: target.uid,
+          recipientUid: target.uid
+        });
       } else {
-        await addDoc(collection(db, 'evaluations'), { ...data, evaluatorId: user.uid, evaluatorName: name, evaluatorRole: 'Admin', createdAt: serverTimestamp() });
+        const evaluation = await addDoc(collection(db, 'evaluations'), { ...data, evaluatorId: user.uid, evaluatorName: name, evaluatorRole: 'Admin', createdAt: serverTimestamp() });
         notify('Penilaian berhasil ditambahkan.');
+        await recordActivity({
+          eventType: 'evaluation_created',
+          title: 'Penilaian baru diterima',
+          message: `Penilaian akhir dari Admin ${name}`,
+          entityId: evaluation.id,
+          studentId: target.uid,
+          recipientUid: target.uid
+        });
       }
       setEvaluationEditor(null);
       setEvaluationEditorOpen(false);
@@ -534,15 +680,44 @@ export default function App() {
   }
   async function deleteEvaluation(item) {
     if (!window.confirm(`Hapus penilaian ${item.studentName || 'mahasiswa'} tanggal ${prettyDate(item.date)}?`)) return;
-    try { await deleteDoc(doc(db, 'evaluations', item.id)); notify('Penilaian berhasil dihapus.'); }
+    try {
+      await deleteDoc(doc(db, 'evaluations', item.id));
+      notify('Penilaian berhasil dihapus.');
+      await recordActivity({
+        eventType: 'evaluation_deleted',
+        title: 'Penilaian dihapus Admin',
+        message: `Penilaian tanggal ${prettyDate(item.date)} dihapus.`,
+        entityId: item.id,
+        studentId: item.studentId,
+        recipientUid: item.studentId
+      });
+    }
     catch (error) { notify(`Penilaian gagal dihapus: ${error.message}`); }
   }
   async function changeRole(student, nextRole) {
-    try { await updateDoc(doc(db, 'users', student.uid), { role: nextRole }); notify(`Role ${student.name} diubah menjadi ${nextRole}.`); }
+    try {
+      await updateDoc(doc(db, 'users', student.uid), { role: nextRole });
+      notify(`Role ${student.name} diubah menjadi ${nextRole}.`);
+      await recordActivity({
+        eventType: 'account_role_changed',
+        title: 'Role akun diperbarui',
+        message: `Role akun Anda sekarang ${nextRole}.`,
+        recipientUid: student.uid
+      });
+    }
     catch (error) { notify(`Role gagal diperbarui: ${error.message}`); }
   }
   async function changeAccountStatus(student, accountStatus) {
-    try { await updateDoc(doc(db, 'users', student.uid), { accountStatus, ...(accountStatus === 'Disetujui' ? { role: student.requestedRole || student.role || 'Mahasiswa' } : {}), reviewedBy: user.uid, reviewedAt: serverTimestamp() }); notify(`Akun ${student.name} ${accountStatus === 'Disetujui' ? 'disetujui' : 'ditolak'}.`); }
+    try {
+      await updateDoc(doc(db, 'users', student.uid), { accountStatus, ...(accountStatus === 'Disetujui' ? { role: student.requestedRole || student.role || 'Mahasiswa' } : {}), reviewedBy: user.uid, reviewedAt: serverTimestamp() });
+      notify(`Akun ${student.name} ${accountStatus === 'Disetujui' ? 'disetujui' : 'ditolak'}.`);
+      await recordActivity({
+        eventType: 'account_status_changed',
+        title: accountStatus === 'Disetujui' ? 'Akun disetujui' : 'Pendaftaran ditolak',
+        message: accountStatus === 'Disetujui' ? 'Akun Anda sudah aktif dan dapat menggunakan portal.' : 'Hubungi Admin MARIMAS untuk informasi lebih lanjut.',
+        recipientUid: student.uid
+      });
+    }
     catch (error) { notify(`Status akun gagal diperbarui: ${error.message}`); }
   }
   async function refreshProfile() {
@@ -561,6 +736,7 @@ export default function App() {
       await updatePassword(auth.currentUser, passwordForm.next);
       setPasswordForm({ current: '', next: '', confirm: '' });
       notify('Kata sandi berhasil diperbarui.');
+      await recordActivity({ eventType: 'password_changed', title: 'Kata sandi diubah', message: 'Keamanan akun Anda diperbarui.' });
     } catch (error) {
       const message = error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential'
         ? 'Kata sandi lama tidak sesuai.'
@@ -587,6 +763,7 @@ export default function App() {
       await setDoc(doc(db, 'profilePhotos', user.uid), { photoData, updatedAt: serverTimestamp() });
       setProfilePhotoData(photoData);
       notify('Foto profil berhasil disimpan.');
+      await recordActivity({ eventType: 'profile_photo_changed', title: 'Foto profil diperbarui', message: 'Foto profil akun Anda berhasil diganti.' });
     } catch (error) { notify(`Foto gagal disimpan: ${error.message}`); }
     finally { setProfileBusy(false); }
   }
@@ -613,6 +790,8 @@ export default function App() {
       {page === 'dashboard' && <><div className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-dot" />KKN - MAGANG MANDIRI</div><h1>Selamat datang, <span>{name.split(' ')[0]}</span> <span className="wave">✳</span></h1><p className="page-subtitle">{role === 'Mahasiswa' ? 'Terus berkembang, satu cerita dan pengalaman baru setiap hari.' : `Pantau kegiatan dan perkembangan ${role.toLowerCase()}.`}</p></div>{role === 'Mahasiswa' && <button className="button button-primary" onClick={() => openLogEditor()}><Plus size={15} /> Tulis logbook</button>}</div><section className="hero-card"><div className="hero-content"><div className="hero-tag">✦ &nbsp;PERJALANAN MAGANGMU</div><h2>Belajar hari ini,<br /><em>berdampak esok hari.</em></h2><p>Catat proses, rayakan progres. Setiap langkah kecil membangun profesional humas masa depan.</p><button className="hero-link" onClick={() => { setPage('logbook'); location.hash = 'logbook'; }}>Lihat aktivitas magang <ArrowUpRight size={13} /></button></div><div className="hero-art"><div className="art-circle"><div className="art-sun" /><div className="art-hill" /><div className="art-person">✦</div></div><div className="art-note">✦ &nbsp;MAKE IT<br />&nbsp;&nbsp;&nbsp; MEANINGFUL</div></div></section><div className="section-heading"><div><h2>Ringkasan aktivitas</h2><p>Pantau progres magangmu di sini.</p></div><span className="term-chip"><i />Semester Ganjil 2025/2026</span></div><div className="stats-grid dashboard-stats"><Stat icon={<FileText />} label="Total logbook" value={logs.length} suffix="entri" note={`${pending} menunggu persetujuan`} /><Stat icon={<Star />} label="Rata-rata nilai" value={average} suffix={average === '—' ? '' : '/ 100'} note={`${evaluations.length} penilaian diterima`} color="peach" /></div><div className="dashboard-grid"><section className="panel activity-panel"><PanelHeading title="Aktivitas terbaru" subtitle="Perjalanan magangmu" action={<button className="text-button" onClick={() => { setPage('logbook'); location.hash = 'logbook'; }}>Lihat semua <ArrowRight size={13} /></button>} />{logs.slice(0, 4).map(log => <div className="activity-item" key={log.id}><div className="activity-icon"><FileText size={15} /></div><div className="activity-copy"><strong>{log.title}</strong><small>{prettyDate(log.date)} · {log.category}</small></div><Status value={log.status} /></div>)}{!logs.length && <Empty text="Belum ada logbook. Catat aktivitas pertamamu." />}</section><section className="panel progress-panel"><PanelHeading title="Perjalanan magang" subtitle="Progres kegiatanmu" /><div className="progress-date"><span>Logbook terkirim</span><span>{logs.length} aktivitas</span></div><div className="timeline"><div className="timeline-track"><span style={{ width: `${Math.min(logs.length * 5, 100)}%` }} /></div><i className="timeline-marker" /></div><div className="progress-bottom"><span><b>{logs.length}</b> aktivitas tercatat</span><strong>{logs.length ? 'Terus semangat!' : 'Mulai hari ini'}</strong></div><div className="mentor-row"><div className="mentor-avatar"><GraduationCap size={15} /></div><div><small>Role akun</small><strong>{role}</strong></div><span className="mentor-status"><CheckCircle2 size={14} /></span></div></section></div><div className="bottom-banner"><div className="banner-icon">✳</div><div><strong>Punya cerita magang hari ini?</strong><p>Jangan lupa catat pengalaman dan pembelajaran barumu.</p></div>{role === 'Mahasiswa' && <button className="button button-light" onClick={() => openLogEditor()}>Isi logbook <ArrowRight size={13} /></button>}</div></>}
 
       {page === 'logbook' && <><PageTitle eyebrow="CATAT DAN BERTUMBUH" title="Logbook" subtitle="Dokumentasikan aktivitas dan pembelajaran magang." action={role === 'Admin' ? <div className="logbook-page-actions">{logs.some(log => historicalActivityLocation(log.date) && (log.activityLocation !== historicalActivityLocation(log.date) || log.start !== '08:00' || log.end !== '16:00')) && <button className="button button-outline" onClick={applyHistoricalLocations}>Atur lokasi 23&ndash;25 Nov</button>}<button className="button button-primary" onClick={() => openLogEditor()}><Plus size={15} /> Tambah logbook</button></div> : role === 'Mahasiswa' && <button className="button button-primary" onClick={() => openLogEditor()}><Plus size={15} /> Tambah logbook</button>} /><div className="filter-row"><div className="search-box"><Search size={15} /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari aktivitas..." /></div><select className="filter-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}><option value="Semua">Semua status</option><option>Disetujui</option><option>Menunggu</option><option>Perlu revisi</option></select><span className="logbook-result-count">{filteredLogs.length} aktivitas</span></div><section className="panel table-panel"><div className="table-wrap"><table className={role === 'Pembimbing Lapangan' ? 'logbook-table logbook-table-review' : role === 'Admin' ? 'logbook-table logbook-table-admin' : role === 'Mahasiswa' ? `logbook-table logbook-table-student ${filteredLogs.some(log => log.reviewComment) ? 'has-comments' : ''}` : 'logbook-table'}><thead><tr><th>TANGGAL</th><th>MAHASISWA</th><th>AKTIVITAS</th><th>KATEGORI</th><th>DURASI</th><th>STATUS</th><th>KOMENTAR PEMBIMBING</th>{role === 'Pembimbing Lapangan' && <th>VERIFIKASI</th>}{role === 'Admin' && <th>AKSI</th>}</tr></thead><tbody>{filteredLogs.map(log => <tr key={log.id}><td>{prettyDate(log.date)}</td><td>{log.studentName || name}</td><td><div className="logbook-activity-cell">{(log.photoThumbnail || photoThumbs[log.id]) && <button type="button" className="logbook-thumb-open" onClick={() => showEvidence(log)} aria-label={`Perbesar foto bukti ${log.title}`}><img src={log.photoThumbnail || photoThumbs[log.id]} alt={`Thumbnail foto bukti ${log.title}`} loading="lazy" /></button>}<div className="logbook-activity-copy"><b className="table-title">{log.title}</b>{log.photoEvidenceId && <button type="button" className="logbook-photo-link" onClick={() => showEvidence(log)}><ImagePlus size={16} /> Lihat foto bukti</button>            }{activityLocationFor(log) && <small className="table-description">Lokasi kegiatan: {activityLocationFor(log)}</small>}{log.photoMetadata && <small className="table-description">Foto diambil: {log.photoMetadata.day}, {log.photoMetadata.date} {' | '} {log.photoMetadata.time}<br />{log.photoMetadata.locationName || activityLocationFor(log) || 'Nama lokasi belum tersedia'}</small>}{log.description && <small className="table-description">{log.description}</small>}</div></div></td><td><span className="category-pill">{log.category}</span></td><td>{duration(log)}</td><td><Status value={log.status} /></td><td>{log.reviewComment || '—'}</td>{role === 'Pembimbing Lapangan' && <td>{log.status === 'Menunggu' ? <div className="review-actions"><button className="approve-button" onClick={() => setReviewModal({ log, status: 'Disetujui', comment: log.reviewComment || '' })}><Check size={14} /> Setujui</button><button className="revise-button" onClick={() => setReviewModal({ log, status: 'Perlu revisi', comment: log.reviewComment || '' })}>Perlu revisi</button></div>  : 'Sudah diverifikasi'}</td>}{role === 'Admin' && <td><div className="admin-row-actions"><button type="button" className="admin-edit-button" onClick={() => openLogEditor(log)}><Pencil size={14} /> Edit</button><button type="button" className="admin-delete-button" onClick={() => deleteLog(log)}><Trash2 size={14} /> Hapus</button></div></td>}</tr>)}</tbody></table>{!filteredLogs.length && <Empty text="Belum ada aktivitas yang cocok." />}</div><div className="table-footer">Menampilkan {filteredLogs.length} aktivitas</div></section></>}
+
+      {page === 'riwayat' && <><PageTitle eyebrow="AKTIVITAS AKUN" title="Riwayat Aktivitas" subtitle="Notifikasi dan perubahan penting terkait akun Anda." action={directActivity.some(item => item.read === false) ? <button className="button button-outline" onClick={markAllActivityRead}>Tandai semua dibaca</button> : null} /><section className="activity-history-list">{activityEvents.length ? activityEvents.map(item => <article className={`activity-history-item ${item.read === false ? 'unread' : ''}`} key={item.id}><div className="activity-history-icon"><Activity size={18} /></div><div className="activity-history-copy"><div className="activity-history-heading"><strong>{item.title}</strong>{item.read === false && <span className="activity-unread-label">Baru</span>}</div><p>{item.message}</p><small>{item.actorName} · {item.actorRole} · {activityTimestamp(item.createdAt)}</small></div>{item.read === false && item.recipientUid === user.uid && <button className="text-button" onClick={() => markActivityRead(item)}>Tandai dibaca</button>}</article>) : <Empty text="Belum ada riwayat aktivitas." />}</section></>}
 
       {page === 'penilaian' && <>
         <PageTitle eyebrow="EVALUASI DAN UMPAN BALIK" title="Penilaian" subtitle="Penilaian akhir pembimbing lapangan memakai tiga indikator resmi." action={role === 'Admin' && <button type="button" className="button button-primary" onClick={() => openEvaluationEditor()}><Plus size={15} /> Tambah penilaian</button>} />

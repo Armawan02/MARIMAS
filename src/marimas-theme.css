@@ -648,11 +648,54 @@ body { font-size: var(--font-body); line-height: 1.6; }
 .password-change-form button { justify-self: start; min-height: 42px; }
 .password-change-form button:disabled, .photo-actions button:disabled { opacity: .65; cursor: wait; }
 .settings-account-meta { padding-bottom: 0; }
+.settings-account-meta .profile-field { display: none; }
+.notification-button { position: relative; }
+.notification-button i { display: none; }
+.notification-button[data-unread]:not([data-unread="0"])::after {
+  content: attr(data-unread);
+  position: absolute;
+  top: -4px;
+  right: -5px;
+  display: grid;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  place-items: center;
+  border: 2px solid #6f1024;
+  border-radius: 999px;
+  background: #e4b83e;
+  color: #581020;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+.activity-history-list { display: grid; gap: 10px; }
+.activity-history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #eee5df;
+  border-radius: 10px;
+  background: #fff;
+}
+.activity-history-item.unread { border-color: #e5c565; background: #fffaf0; }
+.activity-history-icon { display: grid; flex: 0 0 38px; width: 38px; height: 38px; place-items: center; border-radius: 9px; background: #fff1d0; color: #8c1830; }
+.activity-history-copy { flex: 1; min-width: 0; }
+.activity-history-heading { display: flex; align-items: center; gap: 9px; color: #451521; }
+.activity-history-heading strong { font-size: .96rem; }
+.activity-history-copy p { margin: 5px 0; color: #69585b; font-size: .9rem; line-height: 1.5; overflow-wrap: anywhere; }
+.activity-history-copy small { color: #8d7a7b; font-size: .78rem; }
+.activity-unread-label { padding: 3px 7px; border-radius: 999px; background: #f4d36c; color: #581020; font-size: .68rem; font-weight: 800; }
+.activity-history-item > .text-button { flex: 0 0 auto; font-size: .78rem; }
 @media (max-width: 600px) {
   .settings-profile-summary { align-items: flex-start; gap: 14px; }
   .settings-profile-summary .settings-avatar { width: 62px; height: 62px; }
   .settings-profile-summary .settings-details h2 { font-size: 1.15rem; }
   .password-change-form { grid-template-columns: minmax(0, 1fr); }
+  .activity-history-item { gap: 10px; padding: 13px; }
+  .activity-history-icon { flex-basis: 32px; width: 32px; height: 32px; }
+  .activity-history-item > .text-button { font-size: .7rem; }
 }
 .log-photo-field { display: grid; gap: 12px; padding: 15px; border: 1px solid #eadbd6; border-radius: 10px; background: #fffaf2; }
 .log-photo-field > div:first-child strong { color: #451521; font-size: .94rem; }

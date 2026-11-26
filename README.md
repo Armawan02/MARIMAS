@@ -29,5 +29,6 @@ Paket gratis Firestore memiliki batas penyimpanan dan kuota pemakaian. Foto suda
 - `users/{uid}`: profil akun dan role.
 - `logbooks/{id}`: aktivitas mahasiswa, status persetujuan, dan catatan kegiatan.
 - `evaluations/{id}`: nilai, kompetensi, evaluator, dan umpan balik.
+- `activityEvents/{id}`: riwayat aktivitas dan notifikasi yang dibatasi untuk akun penerima atau role terkait.
 
-Aturan akses awal tersedia di `firestore.rules`. Tinjau dan sesuaikan aturan dengan kebijakan pembimbing, data akademik, dan alur persetujuan kampus sebelum dipakai untuk data nyata.
+Aturan akses awal tersedia di `firestore.rules`. Setelah memperbarui aturan, terapkan dan **Publish** versi terbaru di Firebase Console agar riwayat aktivitas dan notifikasi dapat dibaca serta ditulis. Tinjau aturan dengan kebijakan pembimbing, data akademik, dan alur persetujuan kampus sebelum dipakai untuk data nyata.
