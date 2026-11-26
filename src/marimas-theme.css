@@ -532,14 +532,14 @@ body { font-size: var(--font-body); line-height: 1.6; }
 .logbook-table th:nth-child(5), .logbook-table td:nth-child(5) { width: 8%; }
 .logbook-table th:nth-child(6), .logbook-table td:nth-child(6) { width: 11%; }
 .logbook-table th:nth-child(7), .logbook-table td:nth-child(7) { width: 16%; }
-.logbook-table-review th:nth-child(1), .logbook-table-review td:nth-child(1) { width: 8%; }
-.logbook-table-review th:nth-child(2), .logbook-table-review td:nth-child(2) { width: 9%; }
-.logbook-table-review th:nth-child(3), .logbook-table-review td:nth-child(3) { width: 25%; }
-.logbook-table-review th:nth-child(4), .logbook-table-review td:nth-child(4) { width: 9%; }
-.logbook-table-review th:nth-child(5), .logbook-table-review td:nth-child(5) { width: 7%; }
-.logbook-table-review th:nth-child(6), .logbook-table-review td:nth-child(6) { width: 12%; }
-.logbook-table-review th:nth-child(7), .logbook-table-review td:nth-child(7) { width: 12%; }
-.logbook-table-review th:nth-child(8), .logbook-table-review td:nth-child(8) { width: 18%; }
+.logbook-table-review th:nth-child(1), .logbook-table-review td:nth-child(1) { width: 10%; }
+.logbook-table-review th:nth-child(2), .logbook-table-review td:nth-child(2) { width: 12%; }
+.logbook-table-review th:nth-child(3), .logbook-table-review td:nth-child(3) { width: 32%; }
+.logbook-table-review th:nth-child(4), .logbook-table-review td:nth-child(4) { width: 12%; }
+.logbook-table-review th:nth-child(5), .logbook-table-review td:nth-child(5) { width: 8%; }
+.logbook-table-review th:nth-child(6), .logbook-table-review td:nth-child(6) { width: 10%; }
+.logbook-table-review th:nth-child(7), .logbook-table-review td:nth-child(7) { display: none; }
+.logbook-table-review th:nth-child(8), .logbook-table-review td:nth-child(8) { width: 16%; }
 .logbook-table-review .status-pill { white-space: nowrap; }
 .logbook-table .table-title { display: block; font-size: .9rem; line-height: 1.45; font-weight: 700; }
 .logbook-table .table-description { display: block; max-width: none; margin-top: 5px; font-size: .8rem; line-height: 1.5; overflow: visible; text-overflow: clip; }
