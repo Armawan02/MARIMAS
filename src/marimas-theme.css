@@ -533,12 +533,12 @@ body { font-size: var(--font-body); line-height: 1.6; }
 .logbook-table th:nth-child(6), .logbook-table td:nth-child(6) { width: 11%; }
 .logbook-table th:nth-child(7), .logbook-table td:nth-child(7) { width: 16%; }
 .logbook-table-review th:nth-child(1), .logbook-table-review td:nth-child(1) { width: 8%; }
-.logbook-table-review th:nth-child(2), .logbook-table-review td:nth-child(2) { width: 10%; }
-.logbook-table-review th:nth-child(3), .logbook-table-review td:nth-child(3) { width: 22%; }
-.logbook-table-review th:nth-child(4), .logbook-table-review td:nth-child(4) { width: 10%; }
+.logbook-table-review th:nth-child(2), .logbook-table-review td:nth-child(2) { width: 9%; }
+.logbook-table-review th:nth-child(3), .logbook-table-review td:nth-child(3) { width: 27%; }
+.logbook-table-review th:nth-child(4), .logbook-table-review td:nth-child(4) { width: 9%; }
 .logbook-table-review th:nth-child(5), .logbook-table-review td:nth-child(5) { width: 7%; }
-.logbook-table-review th:nth-child(6), .logbook-table-review td:nth-child(6) { width: 9%; }
-.logbook-table-review th:nth-child(7), .logbook-table-review td:nth-child(7) { width: 14%; }
+.logbook-table-review th:nth-child(6), .logbook-table-review td:nth-child(6) { width: 8%; }
+.logbook-table-review th:nth-child(7), .logbook-table-review td:nth-child(7) { width: 12%; }
 .logbook-table-review th:nth-child(8), .logbook-table-review td:nth-child(8) { width: 20%; }
 .logbook-table .table-title { display: block; font-size: .9rem; line-height: 1.45; font-weight: 700; }
 .logbook-table .table-description { display: block; max-width: none; margin-top: 5px; font-size: .8rem; line-height: 1.5; overflow: visible; text-overflow: clip; }
@@ -554,7 +554,18 @@ body { font-size: var(--font-body); line-height: 1.6; }
   .search-box { flex: 1 1 100%; width: 100%; }
   .filter-select { flex: 0 0 145px; }
   .logbook-table { min-width: 760px !important; }
-  .logbook-table-review { min-width: 980px !important; }
+  .logbook-table-review { min-width: 760px !important; }
+  .logbook-table-review th,
+  .logbook-table-review td { padding: 12px 8px; }
+  .logbook-table-review .logbook-activity-cell { gap: 8px; }
+  .logbook-table-review .logbook-thumb-open { flex-basis: 56px; width: 56px; height: 48px; }
+  .logbook-table-review .table-title { font-size: .82rem; }
+  .logbook-table-review .table-description { font-size: .72rem; }
+  .logbook-table-review .status-pill,
+  .logbook-table-review .category-pill { padding: 5px 7px; font-size: .68rem; }
+  .logbook-table-review .review-actions { flex-direction: column; align-items: stretch; gap: 5px; }
+  .logbook-table-review .review-actions .approve-button,
+  .logbook-table-review .review-actions .revise-button { justify-content: center; width: 100%; min-height: 34px; padding: 7px 6px; font-size: .72rem; }
 }
 
 /* Profile menu in the top bar */
@@ -751,6 +762,7 @@ body { font-size: var(--font-body); line-height: 1.6; }
 @media (max-width: 760px) {
   .logbook-result-count { display: none; }
   .logbook-table-student { min-width: 760px !important; }
+  .logbook-table-review { min-width: 760px !important; }
   .logbook-table-admin { min-width: 1080px !important; }
   .logbook-page-actions { width: 100%; justify-content: flex-start; }
   .logbook-page-actions .button { flex: 1 1 auto; }
